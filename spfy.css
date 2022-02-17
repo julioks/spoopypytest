@@ -1,0 +1,10 @@
+body{
+    font-family: monospace;
+    background-color: black;
+}
+.spotify{
+    color: blanchedalmond;
+}
+#current-track{
+    width: 10rem;
+}

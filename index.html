@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Spotify Web Playback SDK Template</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="spfy.css"
+      rel="stylesheet"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.min.js"
+      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Include the Web Playback SDK -->
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+
+    <!-- Include our Javascript -->
+    <script>
+      // Get the hash of the url
+      const hash = window.location.hash
+        .substring(1)
+        .split('&')
+        .reduce(function (initial, item) {
+          if (item) {
+            var parts = item.split('=');
+            initial[parts[0]] = decodeURIComponent(parts[1]);
+          }
+          return initial;
+        }, {});
+      window.location.hash = '';
+
+      // Set token
+      let _token = hash.access_token;
+
+      const authEndpoint = 'https://accounts.spotify.com/authorize';
+
+      // Replace with your app's client ID, redirect URI and desired scopes
+      const clientId = '00c4e1b08e0d44b88ac37c1cac605030';
+      const redirectUri ="http://127.0.0.1:5500/spfy.html";
+      const scopes = [
+        'streaming',
+      ];
+
+      // If there is no token, redirect to Spotify authorization
+      if (!_token) {
+        window.location = `${authEndpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes.join(
+          '%20'
+        )}&response_type=token&show_dialog=true`;
+      }
+
+      // Set up the Web Playback SDK
+      var player,liked,devid;
+      var current=0;
+      window.onSpotifyPlayerAPIReady = () => {
+        player = new Spotify.Player({
+          name: 'Web Playback SDK Template',
+          getOAuthToken: (cb) => {
+            cb(_token);
+          },
+        });
+
+        // Error handling
+        player.on('initialization_error', (e) => console.error(e));
+        player.on('authentication_error', (e) => console.error(e));
+        player.on('account_error', (e) => console.error(e));
+        player.on('playback_error', (e) => console.error(e));
+
+        // Playback status updates
+        player.on('player_state_changed', (state) => {
+          console.log(state);
+          $('#current-track').attr(
+            'src',
+            state.track_window.current_track.album.images[0].url
+          );
+          $('#current-track-name').text(state.track_window.current_track.name);
+          $('#current-track-id').text(state.track_window.current_track.uri);
+          $('#current-position').text(+state.position/1000);
+
+        });
+        
+
+        // Ready
+        player.on('ready', (data) => {
+          console.log('Ready with Device ID', data.device_id);
+          devid=data.device_id;
+          // Play a track using our new device ID
+          play(devid);
+        });
+
+        // Connect to the player!
+        player.connect();
+      }
+      var upda= setInterval(updateTimer,1000);
+      function updateTimer(){
+        player.getCurrentState().then(state => {
+        if (!state) {
+          console.error('User is not playing music through the Web Playback SDK');
+          return;
+        }
+        document.getElementById("current-position").text=+state.position/1000;
+        });
+       0;
+      }
+      // Play a specified track on the Web Playback SDK's device ID
+      function play(device_id,trackuri) {
+        $.ajax({
+          url:
+            'https://api.spotify.com/v1/me/player/play?device_id=' + device_id,
+          type: 'PUT',
+          data: '{"uris": ["'+trackuri+'"]}',
+          beforeSend: function (xhr) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
+          },
+          success: function (data) {
+            console.log(data);
+          },
+        });
+      }
+      function getLiked(){
+       
+      }
+      function playS(){
+        player.resume();
+      }
+      function nextSong(){
+        current++;
+        playliked();
+      }
+      function prevSong(){
+        current--;
+        playliked();
+      }
+      function pauseS(){
+        player.pause();
+      }
+      function playliked(){
+         $.ajax({
+           url:'https://api.spotify.com/v1/me/tracks',
+           type:'GET',
+           beforeSend: function (xhr) {
+             xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
+           },
+           success:function(data){
+             liked=data;
+           }
+         })
+         console.log(current)
+         play(devid,liked.items[current].track.uri)
+      }
+
+    </script>
+  </head>
+
+  <body class="container">
+    <div class="spotify">Budget Spotify </h1>
+    <h4>
+     
+    </h4>
+    <p>Mom, Can we get spotify?
+      Spotify at home:
+    </p>
+    <img id="current-track" />
+    <h3 id="current-track-name"></h3>
+    <a class="btn btn-salmon btn-lg" onclick="playS()">Get started!</a>
+    <div onclick="playliked(current)">paly</div>
+    <div id="current-track-id"></div>
+    <div onclick="prevSong()"> prev </div>
+    <div onclick="pauseS()"> pause </div>
+    <div onclick="nextSong()"> next </div>
+    <div id="current-position" onclick="getLiked()"></div>
+  </body>
+</html>

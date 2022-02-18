@@ -20,39 +20,36 @@
 
     <!-- Include our Javascript -->
     <script>
-      // Get the hash of the url
-      const hash = window.location.hash
-        .substring(1)
-        .split('&')
-        .reduce(function (initial, item) {
-          if (item) {
-            var parts = item.split('=');
-            initial[parts[0]] = decodeURIComponent(parts[1]);
-          }
-          return initial;
-        }, {});
-      window.location.hash = '';
+// Get the hash of the url
+const hash = window.location.hash
+.substring(1)
+.split('&')
+.reduce(function (initial, item) {
+  if (item) {
+    var parts = item.split('=');
+    initial[parts[0]] = decodeURIComponent(parts[1]);
+  }
+  return initial;
+}, {});
+window.location.hash = '';
 
-      // Set token
-      let _token = hash.access_token;
+// Set token
+let _token = hash.access_token;
 
-      const authEndpoint = 'https://accounts.spotify.com/authorize';
-
+const authEndpoint = 'https://accounts.spotify.com/authorize'
       // Replace with your app's client ID, redirect URI and desired scopes
       const clientId = '00c4e1b08e0d44b88ac37c1cac605030';
       const csecret = '7b89b21335ce4cfe950e9fb110b66ddb';
       const redirectUri ="https://julioks.github.io/spoopypytest/";
       const scopes = [
-        'streaming',
-      ];
+  'streaming',
+  'user-modify-playback-state'
+];
 
       // If there is no token, redirect to Spotify authorization
       if (!_token) {
-        window.location = `${authEndpoint}?client_id=${clientId}&client_secret=${csecret}&redirect_uri=${redirectUri}&scope=${scopes.join(
-          '%20'
-        )}&response_type=token&show_dialog=true`;
-      }
-
+  window.location = `${authEndpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes.join('%20')}&response_type=token&show_dialog=true`;
+}
       // Set up the Web Playback SDK
       var player,liked,devid,total;
       var current=0;
@@ -229,7 +226,7 @@
     <div id="topstuff">
     <div id="spotify">Budget Spotify </div>
     <div id="toptext">
-      <div>now wit karlos id</div>
+      <div>now wit xd</div>
     <p>Mom, Can we get spotify?<br>
       Spotify at home:
     </p>

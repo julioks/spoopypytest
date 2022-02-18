@@ -122,7 +122,7 @@ const authEndpoint = 'https://accounts.spotify.com/authorize'
             xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
           },
           success: function (data) {
-            document.getElementById("current-track-name").style.fontSize="40px";
+            document.getElementById("current-track-name").style.fontSize="6vh";
             resize_to_fit();
 
           },
@@ -139,6 +139,7 @@ const authEndpoint = 'https://accounts.spotify.com/authorize'
        const element = liked.items[i].track;
        var appe = document.createElement("div");
        appe.innerHTML=+positionsetting+i+": "+element.name;
+       appe.className="playlistsong";
        appe.dataset.position=+positionsetting+i;
        appe.onclick=function(){
          current=this.dataset.position;
@@ -207,7 +208,7 @@ const authEndpoint = 'https://accounts.spotify.com/authorize'
         const currenttrack= document.getElementById("current-track-name");
         const firstroe= document.getElementById("firstrow");
   let fontSize =currenttrack.style.fontSize;
-  currenttrack.style.fontSize = (parseFloat(fontSize) - 1) + 'px';
+  currenttrack.style.fontSize = (+parseFloat(fontSize) - +0.1) + 'vh';
   console.log(currenttrack.style);
   if(currenttrack.clientWidth >=+firstroe.clientWidth-+30){
     
@@ -226,14 +227,14 @@ const authEndpoint = 'https://accounts.spotify.com/authorize'
     <div id="topstuff">
     <div id="spotify">Budget Spotify </div>
     <div id="toptext">
-      <div>now wit xd</div>
+      <div>now wit karlos id</div>
     <p>Mom, Can we get spotify?<br>
       Spotify at home:
     </p>
   </div>
 </div>
     <img id="current-track" />
-    <h3 id="current-track-name" style="font-size: 20px;" ></h3>
+    <h3 id="current-track-name" style="font-size: 6vh;" ></h3>
     <div id="frowbtm">
     <div id="current-track-id" onclick="seekstuff()"></div>
     <div id="playbackbtns">

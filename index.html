@@ -55,7 +55,7 @@
 
 
       // Set up the Web Playback SDK
-      var player,liked,devid;
+      var player,liked,devid,total;
       var current=0;
       window.onSpotifyPlayerAPIReady = () => {
         player = new Spotify.Player({
@@ -73,7 +73,7 @@
 
         // Playback status updates
         player.on('player_state_changed', (state) => {
-          console.log(state);
+          
           $('#current-track').attr(
             'src',
             state.track_window.current_track.album.images[0].url
@@ -89,8 +89,6 @@
         player.on('ready', (data) => {
           console.log('Ready with Device ID', data.device_id);
           devid=data.device_id;
-          // Play a track using our new device ID
-          play(devid);
         });
 
         // Connect to the player!
@@ -128,12 +126,30 @@
             xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
           },
           success: function (data) {
-            console.log(data);
+            
           },
         });
       }
       function getLiked(){
+        
+        const playlit = document.getElementById("playlist");
+  while (playlit.firstChild) {
+    playlit.removeChild(playlit.lastChild);
+  }
+  var positionsetting=  Math.max(0, current-10);
+       for (let i = 0; i< liked.items.length; i++) {
+       const element = liked.items[i].track;
+       var appe = document.createElement("div");
+       appe.innerHTML=+positionsetting+i+": "+element.name;
+       appe.dataset.position=+positionsetting+i;
+       appe.onclick=function(){
+         current=this.dataset.position;
+         play(devid,element.uri);
+         nextPlaylist();
+       };
+       playlit.append(appe);
        
+       }
       }
       function playS(){
         player.resume();
@@ -155,13 +171,37 @@
            type:'GET',
            beforeSend: function (xhr) {
              xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
+           },error:function(){
+            playliked();
            },
            success:function(data){
              liked=data;
+             total=liked.total;
+             play(devid,liked.items[current].track.uri);
            }
+           
          })
         
-         play(devid,liked.items[current].track.uri)
+         
+      }
+      function nextPlaylist(){
+        
+        var positionsetting=  Math.max(0, current-10);
+        console.log(positionsetting);
+        $.ajax({
+           url:'https://api.spotify.com/v1/me/tracks?offset='+positionsetting+'&limit=20&locale=en-US,en;q=0.9,lt;q=0.8',
+           type:'GET',
+           beforeSend: function (xhr) {
+             xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
+           },error:function(){
+            playliked();
+           },
+           success:function(data){
+             liked=data;
+             getLiked();
+           }
+           
+         })
       }
 
 
@@ -169,23 +209,31 @@
   </head>
 
   <body class="container">
-    <div class="spotify">Budget Spotify </div>
-    <div>now wit karlos id</div>
-    <h4>
-     
-    </h4>
+    <div id="firstrow">
+    <div id="topstuff">
+    <div id="spotify">Budget Spotify </div>
+    <div id="toptext">
+      <div>now wit karlos id</div>
     <p>Mom, Can we get spotify?<br>
       Spotify at home:
     </p>
+  </div>
+</div>
     <img id="current-track" />
-    <h3 id="current-track-name"></h3>
+    <h3 id="current-track-name" style=fontSize: width / 12 ></h3>
     <div id="current-track-id" onclick="seekstuff()"></div>
-    <div onclick="playliked(current)">paly</div>
-
-    <div onclick="prevSong()"> prev </div>
-    <div onclick="pauseS()"> pause </div>
-    <div onclick="nextSong()"> next </div>
+    <div id="playbackbtns">
+      <div id="justthebtns">
+    <div id="playbtn" onclick="playliked(current)">paly</div>
+    <div id="prevbtn" onclick="prevSong()"> prev </div>
+    <div id="pausebtn" onclick="pauseS()"> pause </div>
+    <div id="nextbtn" onclick="nextSong()"> next </div>
+  </div>
     <div id="current-position" onclick="getLiked()"></div>
-    <div id="seek-me-pls" >ono</div>
+    <div id="seek-me-pls"  onclick="getLiked()">ono</div>
+  </div>
+  <div onclick="nextPlaylist()"> tetbt</div>
+</div>
+    <div id="playlist"> getshit</div>
   </body>
 </html>

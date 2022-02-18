@@ -41,16 +41,18 @@
       // Replace with your app's client ID, redirect URI and desired scopes
       const clientId = '3dbf44f9cd19429094cd6553263fb373';
       const redirectUri ="https://julioks.github.io/spoopypytest/";
+     const csecret = 'c83bd19a121645ae813db86e8e6e40ad';
       const scopes = [
         'streaming',
       ];
 
       // If there is no token, redirect to Spotify authorization
       if (!_token) {
-        window.location = `${authEndpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes.join(
+        window.location = `${authEndpoint}?client_id=${clientId}&client_secret=${csecret}&redirect_uri=${redirectUri}&scope=${scopes.join(
           '%20'
         )}&response_type=token&show_dialog=true`;
       }
+
 
       // Set up the Web Playback SDK
       var player,liked,devid;

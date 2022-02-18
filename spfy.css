@@ -4,7 +4,7 @@ body{
     color: blanchedalmond;
     display: flex;
     height: 98vh;
-    
+    overflow: hidden;
 }
 
 #topstuff{
@@ -17,8 +17,8 @@ body{
 }
 #playlist{
   width:75vw;
-  font-size: 4.11vh;
-
+  font-size: 4.2vh;
+  overflow: hidden;
 }
 #current-track{
     grid-column: 1;
@@ -41,6 +41,7 @@ body{
     padding-inline: 1%;
     overflow-wrap: anywhere;
     position: relative;
+    overflow: hidden;
 }
 #justthebtns{
     display: flex;

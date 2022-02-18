@@ -1,11 +1,45 @@
 body{
     font-family: monospace;
     background-color: black;
-     color: blanchedalmond;
-}
-.spotify{
     color: blanchedalmond;
+    display: flex;
+    
+}
+
+#topstuff{
+    grid-column: 1;
+    
+}
+
+#current-track{
+    width: 25vw;
+}
+#playlist{
+  width:75vw;
+  font-size: 25px;
 }
 #current-track{
-    width: 10rem;
+    grid-column: 1;
+}
+#current-track-name{
+    white-space: nowrap;
+    width: fit-content;
+    margin-block: 0;
+}
+#playbackbtns{
+    display: flex;
+    flex-direction: column;
+}
+#firstrow{
+    font-size: 20px;
+    width: 25vw;
+    padding-inline: 1%;
+    overflow-wrap: anywhere;
+}
+#justthebtns{
+    display: flex;
+    justify-content: space-between;
+}
+#seek-me-pls{
+font-size: 27px;
 }

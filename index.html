@@ -41,7 +41,7 @@
       // Replace with your app's client ID, redirect URI and desired scopes
       const clientId = '3dbf44f9cd19429094cd6553263fb373';
       const redirectUri ="https://julioks.github.io/spoopypytest/";
-     const csecret = 'c83bd19a121645ae813db86e8e6e40ad';
+      const redirectUri ="http://127.0.0.1:5500/spfy.html";
       const scopes = [
         'streaming',
       ];
@@ -52,7 +52,6 @@
           '%20'
         )}&response_type=token&show_dialog=true`;
       }
-
 
       // Set up the Web Playback SDK
       var player,liked,devid,total;
@@ -103,11 +102,11 @@
         }
         $('#current-position').text(+state.position/1000);
         var txt="<";
-        const passed=Math.round((state.position*20)/state.duration);
+        const passed=Math.round((state.position*30)/state.duration);
         for (let i = 0; i < passed; i++) {
           txt=txt+"+";
         }
-        for (let i = 0; i < 20-passed; i++) {
+        for (let i = 0; i < 30-passed; i++) {
           txt=txt+"-";
         }
         txt=txt+">";
@@ -126,7 +125,9 @@
             xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
           },
           success: function (data) {
-            
+            document.getElementById("current-track-name").style.fontSize="40px";
+            resize_to_fit();
+
           },
         });
       }
@@ -205,6 +206,21 @@
       }
 
 
+      function resize_to_fit() {
+        const currenttrack= document.getElementById("current-track-name");
+        const firstroe= document.getElementById("firstrow");
+  let fontSize =currenttrack.style.fontSize;
+  currenttrack.style.fontSize = (parseFloat(fontSize) - 1) + 'px';
+  console.log(currenttrack.style);
+  if(currenttrack.clientWidth >=+firstroe.clientWidth-+30){
+    
+    resize_to_fit();
+  }
+  
+  
+}
+
+
     </script>
   </head>
 
@@ -220,7 +236,8 @@
   </div>
 </div>
     <img id="current-track" />
-    <h3 id="current-track-name" style=fontSize: width / 12 ></h3>
+    <h3 id="current-track-name" style="font-size: 20px;" ></h3>
+    <div id="frowbtm">
     <div id="current-track-id" onclick="seekstuff()"></div>
     <div id="playbackbtns">
       <div id="justthebtns">
@@ -232,7 +249,7 @@
     <div id="current-position" onclick="getLiked()"></div>
     <div id="seek-me-pls"  onclick="getLiked()">ono</div>
   </div>
-  <div onclick="nextPlaylist()"> tetbt</div>
+  </div>
 </div>
     <div id="playlist"> getshit</div>
   </body>

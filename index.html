@@ -79,7 +79,7 @@
           $('#current-track-name').text(state.track_window.current_track.name);
           $('#current-track-id').text(state.track_window.current_track.uri);
           $('#current-position').text(+state.position/1000);
-
+          
         });
         
 
@@ -101,9 +101,19 @@
           console.error('User is not playing music through the Web Playback SDK');
           return;
         }
-        document.getElementById("current-position").text=+state.position/1000;
+        $('#current-position').text(+state.position/1000);
+        var txt="<";
+        const passed=Math.round((state.position*20)/state.duration);
+        for (let i = 0; i < passed; i++) {
+          txt=txt+"+";
+        }
+        for (let i = 0; i < 20-passed; i++) {
+          txt=txt+"-";
+        }
+        txt=txt+">";
+        $('#seek-me-pls').text(txt);
         });
-       0;
+       
       }
       // Play a specified track on the Web Playback SDK's device ID
       function play(device_id,trackuri) {
@@ -148,9 +158,10 @@
              liked=data;
            }
          })
-         console.log(current)
+        
          play(devid,liked.items[current].track.uri)
       }
+
 
     </script>
   </head>
@@ -160,16 +171,18 @@
     <h4>
      
     </h4>
-    <p>Mom, Can we get spotify?
+    <p>Mom, Can we get spotify?<br>
       Spotify at home:
     </p>
     <img id="current-track" />
     <h3 id="current-track-name"></h3>
+    <div id="current-track-id" onclick="seekstuff()"></div>
     <div onclick="playliked(current)">paly</div>
-    <div id="current-track-id"></div>
+
     <div onclick="prevSong()"> prev </div>
     <div onclick="pauseS()"> pause </div>
     <div onclick="nextSong()"> next </div>
     <div id="current-position" onclick="getLiked()"></div>
+    <div id="seek-me-pls" >ono</div>
   </body>
 </html>

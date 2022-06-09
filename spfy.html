@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>spoopypy</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="spfy.css"
+      rel="stylesheet"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.min.js"
+      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Include the Web Playback SDK -->
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+
+    <!-- Include our Javascript -->
+    <script>
+// Get the hash of the url
+const hash = window.location.hash
+.substring(1)
+.split('&')
+.reduce(function (initial, item) {
+  if (item) {
+    var parts = item.split('=');
+    initial[parts[0]] = decodeURIComponent(parts[1]);
+  }
+  return initial;
+}, {});
+window.location.hash = '';
+
+// Set token
+let _token = hash.access_token;
+
+const authEndpoint = 'https://accounts.spotify.com/authorize'
+      // Replace with your app's client ID, redirect URI and desired scopes
+      const clientId = '00c4e1b08e0d44b88ac37c1cac605030';
+      const csecret = '7b89b21335ce4cfe950e9fb110b66ddb';
+      const redirectUri ="http://127.0.0.1:5500/spfy.html";
+      const scopes = [
+  'streaming',
+  'user-modify-playback-state'
+];
+
+      // If there is no token, redirect to Spotify authorization
+      if (!_token) {
+  window.location = `${authEndpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes.join('%20')}&response_type=token&show_dialog=true`;
+}
+      // Set up the Web Playback SDK
+      var player,liked,devid,total;
+      var current=0;
+      var fullpls=[];
+      var allplaylists=[];
+      window.onSpotifyPlayerAPIReady = () => {
+        player = new Spotify.Player({
+          name: 'Web Playback SDK Template',
+          getOAuthToken: (cb) => {
+            cb(_token);
+          },
+        });
+
+        // Error handling
+        player.on('initialization_error', (e) => console.error(e));
+        player.on('authentication_error', (e) => console.error(e));
+        player.on('account_error', (e) => console.error(e));
+        player.on('playback_error', (e) => console.error(e));
+
+        // Playback status updates
+        player.on('player_state_changed', (state) => {
+          
+          $('#current-track').attr(
+            'src',
+            state.track_window.current_track.album.images[0].url
+          );
+          $('#current-track-name').text(state.track_window.current_track.name);
+          $('#current-track-id').text(state.track_window.current_track.uri);
+          $('#current-position').text(+state.position/1000);
+          
+        });
+        
+
+        // Ready
+        player.on('ready', (data) => {
+          console.log('Ready with Device ID', data.device_id);
+          devid=data.device_id;
+        });
+
+        // Connect to the player!
+        player.connect();
+      }
+     
+      var upda= setInterval(updateTimer,500);
+      function updateTimer(){
+        player.getCurrentState().then(state => {
+        if (!state) {
+          console.error('User is not playing music through the Web Playback SDK');
+          return;
+        }
+        $('#current-position').text(+state.position/1000);
+        var txt="<";
+        const passed=Math.round((state.position*30)/state.duration);
+        for (let i = 0; i < passed; i++) {
+          txt=txt+"+";
+        }
+        for (let i = 0; i < 30-passed; i++) {
+          txt=txt+"-";
+        }
+        txt=txt+">";
+        $('#seek-me-pls').text(txt);
+        if (state.duration-state.position<=1000) {
+          nextSong();
+        }
+        });
+        
+        
+       
+      }
+      // Play a specified track on the Web Playback SDK's device ID
+      function play(device_id,trackuri) {
+        $.ajax({
+          url:
+            'https://api.spotify.com/v1/me/player/play?device_id=' + device_id,
+          type: 'PUT',
+          data: '{"uris": ["'+trackuri+'"]}',
+          beforeSend: function (xhr) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
+          },
+          success: function (data) {
+            document.getElementById("current-track-name").style.fontSize="6vh";
+
+            setTimeout(()=>{resize_to_fit()},20);//timeout cause sometimes it tries to resize before the text is set
+            
+
+          },
+        });
+      }
+      function getLiked(){
+        
+        const playlit = document.getElementById("playlist");
+  while (playlit.firstChild) {
+    playlit.removeChild(playlit.lastChild);
+  }
+  var positionsetting=  Math.max(0, current-10);
+       for (let i = 0; i< liked.items.length; i++) {
+       const element = liked.items[i].track;
+       var appe = document.createElement("div");
+       appe.innerHTML=+positionsetting+i+": "+element.name;
+       appe.className="playlistsong";
+       appe.dataset.position=+positionsetting+i;
+       appe.onclick=function(){
+         current=this.dataset.position;
+         play(devid,element.uri);
+         nextPlaylist();
+       };
+       playlit.append(appe);
+       
+       }
+      }
+      function playS(){
+        player.resume();
+      }
+      function nextSong(){
+        current++;
+        play(devid,fullpls[current].track.uri);
+      }
+      function prevSong(){
+        current--;
+        play(devid,fullpls[current].track.uri);
+      }
+      function pauseS(){
+        player.pause();
+      }
+      function playliked(){
+         $.ajax({
+           url:'https://api.spotify.com/v1/me/tracks',
+           type:'GET',
+           beforeSend: function (xhr) {
+             xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
+           },error:function(){
+            playliked();
+           },
+           success:function(data){
+             liked=data;
+             total=liked.total;
+             play(devid,liked.items[current].track.uri);
+           }
+           
+         })
+        
+         
+      }
+      function nextPlaylist(){
+        
+        var positionsetting=  Math.max(0, current-10);
+        console.log(positionsetting);
+        $.ajax({
+           url:'https://api.spotify.com/v1/me/tracks?offset='+positionsetting+'&limit=20&locale=en-US,en;q=0.9,lt;q=0.8',
+           type:'GET',
+           beforeSend: function (xhr) {
+             xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
+           },error:function(){
+            playliked();
+           },
+           success:function(data){
+             liked=data;
+             getLiked();
+           }
+           
+         })
+      }
+
+
+      function resize_to_fit() {
+        
+        let currenttrack= document.getElementById("current-track-name");
+        let firstroe= document.getElementById("firstrow");
+  let fontSize =currenttrack.style.fontSize;
+  currenttrack.style.fontSize = (+parseFloat(fontSize) - +0.1) + 'vh';
+  if(currenttrack.clientWidth >=+firstroe.clientWidth-+30){
+    
+    resize_to_fit();
+  }
+  console.log("smallening success"+currenttrack.clientWidth+"on  row w "+firstroe.clientWidth);
+
+  
+}
+
+function getPls(){
+ 
+        $.ajax({
+           url:'https://api.spotify.com/v1/me/tracks?offset='+0+'&limit=20&locale=en-US,en;q=0.9,lt;q=0.8',
+           type:'GET',
+           beforeSend: function (xhr) {
+             xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
+           },error:function(){
+            playliked();
+           },
+           success:function(data){
+             console.log(data);
+             for (let i = 0; i < (Math.ceil(data.total))/20; i++) {
+              $.ajax({
+
+              url:'https://api.spotify.com/v1/me/tracks?offset='+(i*20)+'&limit=20&locale=en-US,en;q=0.9,lt;q=0.8',
+              type:'GET',
+
+              beforeSend: function (xhr) {
+
+                xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
+
+              },error:function(){
+
+                console.log("pizda seni");
+              
+              },
+              success:function(data){
+                console.log(data);
+                
+                data.items.forEach(element => {
+                  fullpls.push(element);
+                });
+                
+              }
+           
+         })
+               
+             }
+             setTimeout(()=>{
+              fullpls.sort(function(a, b) {
+              var keyA = new Date(a.added_at),
+                keyB = new Date(b.added_at);
+              // Compare the 2 dates
+              if (keyA < keyB) return 1;
+              if (keyA > keyB) return -1;
+              return 0;
+            });
+               console.log(fullpls);
+               setToText(fullpls);},1000);
+              
+           }
+           
+         })
+
+}
+function setToText(activePlaylist){
+  
+  const playlit = document.getElementById("playlist");
+  while (playlit.firstChild) {
+    playlit.removeChild(playlit.lastChild);
+  }
+       for (let i = 0; i< activePlaylist.length; i++) {
+       const element = activePlaylist[i].track;
+       var appe = document.createElement("div");
+       appe.innerHTML=i+": "+element.name;
+       appe.className="playlistsong";
+       appe.dataset.position=i;
+       appe.onclick=function(){
+         current=this.dataset.position;
+         play(devid,element.uri);
+         console.log("playing: "+current);
+       };
+       playlit.append(appe);
+       
+       }
+}
+function getLists(){
+  $.ajax({
+           url:'https://api.spotify.com/v1/me/playlists?offset='+0+'&limit=20&locale=en-US,en;q=0.9,lt;q=0.8',
+           type:'GET',
+           beforeSend: function (xhr) {
+             xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
+           },error:function(){
+            playliked();
+           },
+           success:function(data){
+             console.log(data);
+             for (let i = 0; i < (Math.ceil(data.total))/20; i++) {
+              $.ajax({
+
+              url:'https://api.spotify.com/v1/me/playlists?offset='+(i*20)+'&limit=20&locale=en-US,en;q=0.9,lt;q=0.8',
+              type:'GET',
+
+              beforeSend: function (xhr) {
+
+                xhr.setRequestHeader('Authorization', 'Bearer ' + _token);
+
+              },error:function(){
+
+                console.log("pizda seni");
+              
+              },
+              success:function(data){
+                console.log(data);
+                
+                data.items.forEach(element => {
+                  allplaylists.push(element);
+                });
+                
+              }
+           
+         })
+               
+             }
+             setTimeout(()=>{
+              allplaylists.sort(function(a, b) {
+              var keyA = new Date(a.added_at),
+                keyB = new Date(b.added_at);
+              // Compare the 2 dates
+              if (keyA < keyB) return 1;
+              if (keyA > keyB) return -1;
+              return 0;
+            });
+               console.log(allplaylists);
+               showPlaylists(allplaylists)},1000);
+              
+           }
+           
+         })
+}
+function showPlaylists(data){
+  const playlit = document.getElementById("allPlaylists");
+  while (playlit.firstChild) {
+    playlit.removeChild(playlit.lastChild);
+  }
+       for (let i = 0; i< data.length; i++) {
+       const element = data[i];
+       var appe = document.createElement("div");
+       appe.innerHTML=i+": "+element.name;
+       appe.className="sninglePlaylist";
+       appe.dataset.position=i;
+       appe.onclick=function(){
+        //  current=this.dataset.position;
+        //  play(devid,element.uri);
+        //  console.log("playing: "+current);
+       };
+       playlit.append(appe);
+       
+       }
+}
+
+
+
+    </script>
+    <script>
+document.getElementById("#seek-me-pls").addEventListener("onclick",console.log("ff"));
+
+    </script>
+  </head>
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="0" height="0">
+    <defs>
+      <filter id="pixelate" x="0" y="0">
+        <feFlood x="1" y="1" height=".5" width=".5"/> 
+        <feComposite width="2.5" height="2.5"/>
+        <feTile result="a"/>
+        <feComposite in="SourceGraphic" in2="a" 
+                     operator="in"/>
+        <feMorphology operator="dilate"
+                      radius="1.25"/>
+      </filter>
+    </defs>
+  </svg>    
+  <body>
+    <div class="container">
+    <div id="firstrow">
+    <div id="topstuff">
+    <div id="spotify">Budget Spotify </div>
+    <div id="toptext">
+      <div></div>
+    <p>Mom, Can we get spotify?<br>
+      No, we have spotify at home<br>
+      Spotify at home:
+    </p>
+  </div>
+</div>
+<div id="img">
+    <img id="current-track" /></div>
+    <h3 id="current-track-name" style="font-size: 6vh;" ></h3>
+    <div id="frowbtm">
+    <div id="current-track-id" onclick="seekstuff()"></div>
+    <div id="playbackbtns">
+      <div id="justthebtns">
+    <div id="playbtn" onclick="getPls()">paly</div>
+    <div id="prevbtn" onclick="prevSong()"> prev </div>
+    <div id="pausebtn" onclick="pauseS()"> pause </div>
+    <div id="nextbtn" onclick="nextSong()"> next </div>
+  </div>
+    <div id="current-position" ></div>
+    <div id="seek-me-pls">ono</div>
+  </div>
+</div>
+</div>
+    <div id="playlist"> getshit</div>
+  </div>
+    <!--<div id="allPlaylists" onclick="getLists()">pleses</div>-->
+    <div id="footer">   <svg id="svglogo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 41"><defs><style>.cls-1{fill:none;stroke:rgb(255, 235, 203);stroke-miterlimit:1;}</style></defs><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><line class="cls-1" x1="20.5" y1="31" x2="20.5"/><path class="cls-1" d="M20.5,30.5a10,10,0,0,0-10-10"/><path class="cls-1" d="M20.5,30.5a10,10,0,0,1-10,10"/><path class="cls-1" d="M.5,30.5a10,10,0,0,0,10,10"/><path class="cls-1" d="M.5,10.5a10,10,0,0,0,10,10"/><path class="cls-1" d="M.5,10.5a10,10,0,0,1,10-10"/><path class="cls-1" d="M20.5,10.5a10,10,0,0,0-10-10"/></g></g></svg>
+      2022, tf is a copyright, made with redbull and some of that good good  
+    </div>
+  </body>
+</html>

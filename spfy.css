@@ -3,6 +3,7 @@
     src: url(GnuUnifontFull-Pm9P.ttf);
 }
 body{
+    overflow-y:hidden;
     font-family: VCR;
     background-color: black;
     color: #2f902a;
@@ -11,7 +12,7 @@ body{
 
 .container{
     display: flex;
-    height: 95vh;
+    height: 94vh;
     overflow: hidden;
 }
 #topstuff{
@@ -19,9 +20,6 @@ body{
     
 }
 #footer{
-    justify-content: center;
-    text-align: center;
-    height: 5vh;
     font-size: 20px;
     margin-top: 5px;
 }
